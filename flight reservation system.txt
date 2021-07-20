@@ -1,0 +1,302 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+#include <string.h>
+
+
+struct flight{
+    int number;
+    char route[70];
+    struct flight *next;
+    int seat[125];
+};
+
+struct flight *flist = NULL;
+
+struct customer{
+    char name[20];
+    char otp[7];
+    int seatNumber;
+    int flightNumber;
+    struct customer *next;
+};
+
+struct customer *cust;
+
+void otp_generator(struct customer *structcustomer){
+
+    int length = 6;
+    int temp,i=0;
+    char otp[7];
+
+    /* Seed number for rand() */
+
+    srand((unsigned int) time(0));
+
+    temp = length;
+    printf("\n");
+
+    while(temp--) {
+
+        otp[i] = (rand()/rand()+48);
+        srand(rand());
+        i++;
+    }
+    strcat(otp,"\0");
+    strcpy(structcustomer->otp,otp);
+    printf("\n");
+}
+
+void createFlight(int number){
+    int i = 0;
+    struct flight *tmp;
+    struct flight *n = (struct flight*)malloc(sizeof(struct flight));
+    n->number = number;
+    for(i=0;i<125;i++){
+        n->seat[i] = 0;
+    }
+    if(number == 9980){
+
+        strcpy(n->route,"Kempegowda International Airport to Tokyo International Airport");
+        n->next = NULL;
+    }
+    if(number == 9970){
+
+        strcpy(n->route,"Kempegowda International Airport to Dubai International Airport");
+        n->next = NULL;
+    }
+    if(number == 9960){
+
+        strcpy(n->route,"Kempegowda International Airport to Paris Charles de Gaulle Airport");
+        n->next = NULL;
+    }
+
+    if(flist == NULL){
+        flist = n;
+    }else{
+        tmp = flist;
+
+        while(tmp->next != NULL){
+            tmp = tmp->next;
+        }
+        tmp->next = n;
+    }
+}
+
+void printTicket(char *name,int number,char  *otp,int seat){
+    if(number == 9980){
+        printf("\t\tKempegowda International Airport\n\t\t\t\tto\n\t\tTokyo International Airport");
+    }
+    if(number == 9970){
+        printf("\t\tKempegowda International Airport\n\t\t\t\tto\n\t\tDubai International Airport");
+    }
+    if(number == 9960){
+        printf("\t\tKempegowda International Airport\n\t\t\t\tto\n\t\tParis Charles de Gaulle Airport");
+    }
+
+    printf("\n\n\t\tSeat : %d",seat+1);
+    printf("\n\t\tName : %s",name);
+    printf("\n");
+    getche();
+    system("cls");
+    printf("\n");
+}
+
+void viewCustomers(){
+    char pass[10];
+    printf("Enter the password");
+    scanf("%s",pass);
+    if (strcasecmp(pass,"password")==0){
+        struct customer *tmp = cust;
+        printf("                Name    FlightNumber        OTP");
+        while(tmp != NULL){
+            printf("\n%20s %15d %10s\n",tmp->name,tmp->flightNumber,tmp->otp);
+            tmp = tmp->next;
+        }
+    }else{
+        printf("Invalid password\n\n");
+    }
+}
+
+void displayRoutes(){
+    int i=0;
+    struct flight *tmp = flist;
+
+    while(tmp != NULL){
+        printf("%d.%s\n",++i,tmp->route);
+        tmp = tmp->next;
+    }
+}
+
+void displaySeats(struct flight *flight){
+    int i=0;
+    for(i=0;i<=125;i++){
+        if(flight->seat[i] == 0){
+            if(i%10 == 0){
+                printf("\n");
+            }
+            printf("%4d.NB\t",i+1);
+
+        }else {
+            printf("%4d.B \t", i + 1);
+
+        }
+    }
+
+}
+
+void BookTicket(int number){
+    int seat;
+    char otp[7];
+    struct flight *tmp = flist;
+    struct customer*c = cust;
+
+    while(tmp->next != NULL){
+        if(tmp->number==number){
+            break;
+        }
+        tmp = tmp->next;
+    }
+    system("cls");
+    printf("Choose The Seat Number:\n");
+    displaySeats(tmp);
+    printf("\n");
+    scanf("%d",&seat);
+    seat --;
+    tmp->seat[seat] = 1;
+
+    struct customer *n = (struct customer*)malloc(sizeof(struct customer));
+    printf("\nEnter your name :");
+    scanf("%s",n->name);
+    otp_generator(n);
+    n->flightNumber = number;
+    n->seatNumber = seat;
+    printf("OTP is %s",n->otp);
+    printf("\n\nEnter OTP to confirm :");
+    scanf("%s",otp);
+    if(strcasecmp(n->otp,otp)==0) {
+        displaySeats(tmp);
+        getch();
+        n->next = NULL;
+        if (cust == NULL) {
+            cust = n;
+        } else {
+
+            while (c->next != NULL) {
+                c = c->next;
+            }
+            c->next = n;
+        }
+        printf("\n");
+        system("cls");
+        printTicket(n->name, n->flightNumber, n->otp, n->seatNumber);
+    }
+}
+void BookingMenu(){
+    int ch;
+    printf("Choose the flight:\n");
+    displayRoutes();
+    scanf("%d",&ch);
+    switch (ch){
+        case 1:BookTicket(9980);
+            break;
+        case 2:BookTicket(9970);
+            break;
+        case 3:BookTicket(9960);
+            break;
+        default: printf("Invalid Flight Number");
+    }
+}
+
+void CancelBooking(){
+    int sno,fno;
+    char name[30];
+    int ch;
+    printf("Choose the flight:\n");
+    displayRoutes();
+    scanf("%d",&ch);
+    switch (ch){
+        case 1:fno = 9980;
+            break;
+        case 2:fno = 9970;
+            break;
+        case 3:fno = 9960;
+            break;
+        default: printf("Invalid Flight Number");
+    }
+    printf("Enter the seat number:");
+    scanf("%d",&sno);
+    printf("Enter your name:");
+    scanf("%s",name);
+    struct flight *new1 = flist;
+    while(new1 != NULL){
+        if(new1->number == fno){
+            if(sno > 125){
+                printf("No such seat number found.\n\n\n");
+                break;
+            }
+            if(new1->seat[sno] == 1){
+                printf("Your flight was canceled");
+                new1->seat[sno] = 0;
+                break;
+            }else{
+                printf("The seat number was not fount to be booked");
+                break;
+            }
+        }
+    }
+    struct customer *tmp = cust,*q = NULL;
+    while(tmp->next != NULL){
+        q=tmp;
+        tmp=tmp->next;
+        if(strcasecmp(name,q->name) == 0){
+            break;
+        }
+    }
+    if(q == cust){
+        cust = cust->next;
+        free(q);
+    }else{
+        q->next = tmp->next;
+        tmp->next = NULL;
+        free(tmp);
+    }
+}
+
+void menu(){
+    int ch;
+    do {
+        printf("Welcome to LS Flight Reservation.\n1.Book a ticket\n2.Cancel a ticket\n3.View Flights\n4.View Customers\n0.Exit");
+        scanf("%d", &ch);
+        switch (ch) {
+            case 1: system("cls");
+                BookingMenu();
+                break;
+            case 2: system("cls");
+                CancelBooking();
+                break;
+            case 3: system("cls");
+                displayRoutes();
+                break;
+            case 4: system("cls");
+                viewCustomers();
+                break;
+            case 0:
+                exit(0);
+            default:;
+        }
+    }while(ch!=0);
+}
+
+int main() {
+
+    createFlight(9980);
+    createFlight(9970);
+    createFlight(9960);
+
+    menu();
+
+    return 0;
+}
+ 
